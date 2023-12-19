@@ -1,21 +1,21 @@
 services:
 
-  gatekeeper:
+  copro-utils:
     build: .
-    container_name: pr1.gatekeeper
-    image: zsubscription/pr1.agadia-gatekeeper:latest
-    hostname: gatekeeper
+    container_name: pr1.copro.utils
+    image: zsubscription/pr1.copro-utils:latest
+    hostname: coproutils
     restart: always
     ports:
-      - "40002:40002"
+      - "10001:10001"
     volumes:
       - ${BASE_DIR}/data:/data
-    command: [ "java", "-jar", "/usr/app/gatekeeper.jar" ]
+    command: uvicorn app.multipartUtil:app --host 0.0.0.0 --port 10001 --reload
     networks:
       intics:
-        ipv4_address: 172.20.0.8
+        ipv4_address: 172.20.0.30
         aliases:
-          - agadia.gatekeeper
+          - copro.utils
 
 networks:
   intics:

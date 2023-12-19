@@ -1,0 +1,28 @@
+services:
+
+  gatekeeper:
+    build: .
+    container_name: pr1.gatekeeper
+    image: zsubscription/pr1.agadia-gatekeeper:latest
+    hostname: gatekeeper
+    restart: always
+    ports:
+      - "40002:40002"
+    volumes:
+      - ${BASE_DIR}/data:/data
+    command: [ "java", "-jar", "/usr/app/gatekeeper.jar" ]
+    networks:
+      intics:
+        ipv4_address: 172.20.0.8
+        aliases:
+          - agadia.gatekeeper
+
+networks:
+  intics:
+    name: ${CONTAINER_PREFIX}.intics
+    external: true
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1

@@ -24,3 +24,5 @@ build/
 # Miscellaneous
 *.DS_Store
 Thumbs.db
+
+logs/

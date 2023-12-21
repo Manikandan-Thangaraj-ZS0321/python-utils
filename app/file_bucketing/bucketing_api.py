@@ -30,10 +30,9 @@ async def request_middleware(request: Request, call_next):
         logger.error(f"Request ID {request_id} for file bucketing api failed: {ex}")
         raise JSONResponse(content={"success": False}, status_code=500)
     finally:
-        response.headers["X-Request-ID"] = request_id
+        #response.headers["X-Request-ID"] = request_id
         logger.info(
-            "Request ended {} with TAT {}".format(response.status_code,
-                                                  (round(time.time() - process_start_time, 2))))
+            "Request ended with TAT {}".format((round(time.time() - process_start_time, 2))))
         logger.debug("Garbage collection  {} for ID {}".format(gc.collect(), request_id))
         return response
 

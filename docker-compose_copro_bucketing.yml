@@ -1,6 +1,6 @@
 services:
 
-  copro-utils:
+  copro-bucketing:
     build: .
     container_name: pr1.copro.bucketing
     image: zsubscription/pr1.copro.bucketing:latest

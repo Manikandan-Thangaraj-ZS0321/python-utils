@@ -2,20 +2,20 @@ services:
 
   copro-utils:
     build: .
-    container_name: pr1.copro-bucketing
-    image: zsubscription/pr1.copro-bucketing:latest
-    hostname: coproutils
+    container_name: pr1.copro.bucketing
+    image: zsubscription/pr1.copro.bucketing:latest
+    hostname: coprobucketing
     restart: always
     ports:
-      - "10001:10001"
+      - "10002:10002"
     volumes:
       - ${BASE_DIR}/data:/data
-    command: uvicorn app.multipartUtil:app --host 0.0.0.0 --port 10002 --reload
+    command: uvicorn app.file_bucketing.bucketing_api:app --host 0.0.0.0 --port 10002 --reload
     networks:
       intics:
-        ipv4_address: 172.20.0.30
+        ipv4_address: 172.20.0.55
         aliases:
-          - copro.utils
+          - copro.bucketing
 
 networks:
   intics:

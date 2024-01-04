@@ -1,7 +1,9 @@
 import os
-import requests
+from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile, Query
+from fastapi.responses import FileResponse
+
 from app.connection import getCommonConfig
 from app.loggers import logger
 
@@ -15,8 +17,14 @@ async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...
         if not os.path.exists(outputDir):
             os.makedirs(outputDir)
         outputFile = os.path.join(outputDir, file.filename)
+
+        # Remove if existing file is present
+        if os.path.exists(outputFile):
+            os.remove(outputFile)
+
         with open(outputFile, "wb") as f:
             f.write(file.file.read())
+
         logger.info("File {} downloaded successfully".format(file.filename))
         return {"message": "File downloaded successfully", "filename": file.filename}
     except Exception as e:
@@ -24,21 +32,18 @@ async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...
         return {"error": str(e)}
 
 
+@app.post("/multipart-download")
 def do_upload_file(filepath: str):
     try:
-        fileUploadUrl = CONFIG['vulcan.original.file.url']
-        outputDir = os.path.dirname(filepath)
-        files = {'file': open(filepath, 'rb')}
-        url_with_params = f"{fileUploadUrl}?outputDir={outputDir}"
-        response = requests.post(url_with_params, files=files)
-        code = response.status_code
-        logger.info("File {} uploaded successfully with status code {}".format(filepath, code))
-        return {"message": "File uploaded successfully", "file": filepath, "responseCode": code}
+        file_path = Path(filepath)
+        logger.info({"message": "File uploaded"})
+        return FileResponse(path=file_path)
     except Exception as e:
-        logger.error("Error in uploading multipart file {} with exception {}".format(filepath, e))
+        logger.error(f"Error in uploading multipart file {filepath} with exception {e}")
         return {"error": str(e)}
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8002)

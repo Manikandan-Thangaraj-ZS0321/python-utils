@@ -18,10 +18,6 @@ async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...
             os.makedirs(outputDir)
         outputFile = os.path.join(outputDir, file.filename)
 
-        # Remove if existing file is present
-        if os.path.exists(outputFile):
-            os.remove(outputFile)
-
         with open(outputFile, "wb") as f:
             f.write(file.file.read())
 

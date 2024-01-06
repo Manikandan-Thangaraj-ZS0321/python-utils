@@ -19,7 +19,12 @@ async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...
         outputFile = os.path.join(outputDir, file.filename)
 
         with open(outputFile, "wb") as f:
-            f.write(file.file.read())
+            read = file.file.read()
+            f.write(read)
+
+            # Flush and close the file stream to ensure all data is written
+            f.flush()
+            f.close()
 
         logger.info("File {} downloaded successfully".format(file.filename))
         return {"message": "File downloaded successfully", "filename": file.filename}
@@ -32,8 +37,9 @@ async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...
 def do_upload_file(filepath: str):
     try:
         file_path = Path(filepath)
+        filename = os.path.basename(file_path)
         logger.info({"message": "File uploaded"})
-        return FileResponse(path=file_path)
+        return FileResponse(path=file_path, filename=filename)
     except Exception as e:
         logger.error(f"Error in uploading multipart file {filepath} with exception {e}")
         return {"error": str(e)}

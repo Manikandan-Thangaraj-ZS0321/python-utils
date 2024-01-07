@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 
 from app.connection import getCommonConfig
 from app.loggers import logger
@@ -34,16 +34,23 @@ async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...
 
 
 @app.post("/multipart-download")
-def do_upload_file(filepath: str):
+async def do_upload_file(filepath: str):
     try:
         file_path = Path(filepath)
         filename = os.path.basename(file_path)
         logger.info({"message": "File uploaded"})
-        return FileResponse(path=file_path, filename=filename)
+
+        def file_iterator(filepath):
+            with open(filepath, "rb") as file:
+                while chunk := file.read(65536):
+                    yield chunk
+
+        return StreamingResponse(file_iterator(file_path), media_type="application/octet-stream",
+                                 headers={"Content-Disposition": f"attachment; filename={filename}"})
+
     except Exception as e:
         logger.error(f"Error in uploading multipart file {filepath} with exception {e}")
         return {"error": str(e)}
-
 
 if __name__ == "__main__":
     import uvicorn

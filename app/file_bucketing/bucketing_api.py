@@ -45,15 +45,21 @@ def info():
 class PreprocessRequest(BaseModel):
     inputDir: str
     outputDir: str
-    low_effort_min_page: list
-    high_effort_max_page: list
+    low_effort_high_yield_min_page: int
+    low_effort_high_yield_max_page: int
+    high_effort_high_yield_min_page: int
+    high_effort_high_yield_max_page: int
+    high_effort_low_yield_min_page: int
+    min_page: list
+    max_page: list
 
 @app.post("/file-bucket")
 def files_bucket(request: PreprocessRequest):
     logger.info("given file bucketing inbound request  {}".format(request.__str__()))
     processed_files = None
     try:
-        processed_files = bucketing(request.inputDir, request.outputDir,request.low_effort_min_page,request.high_effort_max_page)
+        processed_files = bucketing(request.inputDir, request.outputDir, request.min_page, request.max_page, request.low_effort_high_yield_min_page, request.low_effort_high_yield_max_page,
+                                   request.high_effort_high_yield_min_page, request.high_effort_high_yield_max_page, request.high_effort_low_yield_min_page)
         logger.info(
             "File Bucketing completed for the given input {} and stored the result in {}".format(request.inputDir,
                                                                                          request.outputDir))

@@ -4,42 +4,63 @@ import fitz
 
 from app.loggers import logger
 
-def bucketing(input_path, output_path, low_effort_min_page, high_effort_max_page):
+def create_folder(output_path, category, folder_name):
+    folder_path = os.path.join(output_path, "file_bucketing", category, folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+    return folder_path
+
+
+def copy_to_folder(file_path, output_folder):
+    shutil.copy(file_path, output_folder)
+
+
+def update_output(output, folder_name, output_folder, filename):
+    if folder_name not in output:
+        output[folder_name] = []
+    output[folder_name].append(os.path.join(output_folder, filename))
+
+
+def bucketing(input_path, output_path, min_page, max_page,
+              low_effort_high_yield_min_page, low_effort_high_yield_max_page,
+              high_effort_high_yield_min_page, high_effort_high_yield_max_page,
+              high_effort_low_yield_min_page):
     try:
-        # Create a dictionary to store the output information
         output = dict()
 
-        # Iterate through each file in the input path
-        for filename in os.listdir(input_path):
-            file_path = os.path.join(input_path, filename)
+        for root, dirs, files in os.walk(input_path):
+            for filename in files:
+                file_path = os.path.join(root, filename)
 
-            # Check if the file is a PDF
-            if file_path.endswith('.pdf'):
-                # Open the PDF document using PyMuPDF
-                pdf_document = fitz.open(file_path)
-                num_pages = pdf_document.page_count
+                if file_path.endswith('.pdf'):
+                    pdf_document = fitz.open(file_path)
+                    num_pages = pdf_document.page_count
 
-                # Iterate through the specified page ranges
-                for i, j in zip(low_effort_min_page, high_effort_max_page):
-                    if i <= num_pages < j:
-                        # Create a folder for the current page range in the output path
-                        folder_name = f'pages_from_{i}_to_{j}'
-                        output_folder = os.path.join(output_path, "file_bucketing", folder_name)
-                        os.makedirs(output_folder, exist_ok=True)
+                    if low_effort_high_yield_min_page <= num_pages < low_effort_high_yield_max_page:
+                        for i, j in zip(min_page, max_page):
+                            if i <= num_pages < j:
+                                folder_name = f'pages_from_{i}_to_{j}'
+                                output_folder = create_folder(output_path, "low_effort_high_yield", folder_name)
+                                copy_to_folder(file_path, output_folder)
+                                update_output(output, folder_name, output_folder, filename)
+                                break
 
-                        # Copy the PDF file to the output folder
-                        shutil.copy(file_path, output_folder)
+                    elif high_effort_high_yield_min_page <= num_pages < high_effort_high_yield_max_page:
+                        for i, j in zip(min_page, max_page):
+                            if i <= num_pages < j:
+                                folder_name = f'pages_from_{i}_to_{j}'
+                                output_folder = create_folder(output_path, "high_effort_high_yield", folder_name)
+                                copy_to_folder(file_path, output_folder)
+                                update_output(output, folder_name, output_folder, filename)
+                                break
 
-                        # Update the output dictionary with the file information
-                        if folder_name not in output:
-                            output[folder_name] = []
-                        output[folder_name].append(os.path.join(output_folder, filename))
-                        break
+                    elif num_pages > high_effort_low_yield_min_page:
+                        folder_name = f'pages_above_{high_effort_low_yield_min_page}'
+                        output_folder = create_folder(output_path, "high_effort_low_yield", folder_name)
+                        copy_to_folder(file_path, output_folder)
+                        update_output(output, folder_name, output_folder, filename)
 
-                # Close the PDF document
-                pdf_document.close()
+                    pdf_document.close()
 
-        # Return the output dictionary
         return output
 
     except FileNotFoundError as file_not_found_error:

@@ -2,36 +2,48 @@ import os
 import shutil
 import fitz
 
-from app.loggers import *
+from app.loggers import logger
 
-def bucketing(input_path, output_path, low_effort_high_yield_min_page,low_effort_high_yield_max_page,high_effort_high_yield_min_page, high_effort_high_yield_max_page, high_effort_low_yield_min_page):
-    output = dict()
+def bucketing(input_path, output_path, low_effort_min_page, high_effort_max_page):
+    try:
+        # Create a dictionary to store the output information
+        output = dict()
 
-    for filename in os.listdir(input_path):
-        file_path = os.path.join(input_path, filename)
-        try:
+        # Iterate through each file in the input path
+        for filename in os.listdir(input_path):
+            file_path = os.path.join(input_path, filename)
+
+            # Check if the file is a PDF
             if file_path.endswith('.pdf'):
+                # Open the PDF document using PyMuPDF
                 pdf_document = fitz.open(file_path)
                 num_pages = pdf_document.page_count
-                if (num_pages >= low_effort_high_yield_min_page and num_pages <= low_effort_high_yield_max_page):
-                    effort_yield = "low_effort_high_yield"
-                elif (num_pages >= high_effort_high_yield_min_page and num_pages <= high_effort_high_yield_max_page):
-                    effort_yield = "high_effort_high_yield"
-                elif (num_pages >= high_effort_low_yield_min_page):
-                    effort_yield = "high_effort_low_yield"
-                else:
-                    effort_yield = ""
 
-                output_folder = os.path.join(output_path, "file_bucketing",
-                                             effort_yield, f"page-{num_pages}")
-                os.makedirs(output_folder, exist_ok=True)
-                shutil.copy(file_path, output_folder)
-                if f"page-{num_pages}" not in output:
-                    output[f"page-{num_pages}"] = []
+                # Iterate through the specified page ranges
+                for i, j in zip(low_effort_min_page, high_effort_max_page):
+                    if i <= num_pages < j:
+                        # Create a folder for the current page range in the output path
+                        folder_name = f'pages_from_{i}_to_{j}'
+                        output_folder = os.path.join(output_path, "file_bucketing", folder_name)
+                        os.makedirs(output_folder, exist_ok=True)
 
-                output[f"page-{num_pages}"].append(os.path.join(output_folder, filename))
-            else:
-                logger.warning(f"Unsupported file type: {file_path}")
-        except Exception as ex:
-            raise ex
-    return output
+                        # Copy the PDF file to the output folder
+                        shutil.copy(file_path, output_folder)
+
+                        # Update the output dictionary with the file information
+                        if folder_name not in output:
+                            output[folder_name] = []
+                        output[folder_name].append(os.path.join(output_folder, filename))
+                        break
+
+                # Close the PDF document
+                pdf_document.close()
+
+        # Return the output dictionary
+        return output
+
+    except FileNotFoundError as file_not_found_error:
+        logger.error(f"Error: {file_not_found_error}. Please check if the input path exists.")
+    except Exception as ex:
+        logging.error(f"An unexpected error occurred: {ex}")
+

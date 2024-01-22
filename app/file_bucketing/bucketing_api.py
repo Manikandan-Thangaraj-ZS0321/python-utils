@@ -8,7 +8,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette_prometheus import PrometheusMiddleware, metrics
 
-from app.file_bucketing.bucket import *
+from app.file_bucketing.bucket import bucketing
 from app.loggers import logger
 
 COPRO_APP = "Copro App"
@@ -45,20 +45,15 @@ def info():
 class PreprocessRequest(BaseModel):
     inputDir: str
     outputDir: str
-    low_effort_high_yield_min_page: int = 1
-    low_effort_high_yield_max_page: int = 4
-    high_effort_high_yield_min_page: int = 5
-    high_effort_high_yield_max_page: int = 10
-    high_effort_low_yield_min_page: int = 11
+    low_effort_min_page: list
+    high_effort_max_page: list
 
-
-@app.post("/copro/bucket")
+@app.post("/file-bucket")
 def files_bucket(request: PreprocessRequest):
     logger.info("given file bucketing inbound request  {}".format(request.__str__()))
     processed_files = None
     try:
-        processed_files = bucketing(request.inputDir, request.outputDir,request.low_effort_high_yield_min_page,request.low_effort_high_yield_max_page,
-                                    request.high_effort_high_yield_min_page,request.high_effort_high_yield_max_page, request.high_effort_low_yield_min_page)
+        processed_files = bucketing(request.inputDir, request.outputDir,request.low_effort_min_page,request.high_effort_max_page)
         logger.info(
             "File Bucketing completed for the given input {} and stored the result in {}".format(request.inputDir,
                                                                                          request.outputDir))

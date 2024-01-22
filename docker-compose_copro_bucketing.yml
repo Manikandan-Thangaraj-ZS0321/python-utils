@@ -3,7 +3,7 @@ services:
   copro-bucketing:
     build: .
     container_name: pr1.copro.bucketing
-    image: zsubscription/pr1.copro.bucketing:latest
+    image: zsubscription/pr1.copro-utils:latest
     hostname: coprobucketing
     restart: always
     ports:

@@ -24,6 +24,12 @@ def bucketing(input_path, output_path, min_page, max_page,
               low_effort_high_yield_min_page, low_effort_high_yield_max_page,
               high_effort_high_yield_min_page, high_effort_high_yield_max_page,
               high_effort_low_yield_min_page):
+
+    if not os.path.exists(input_path):
+        raise ValueError(f"Input Directory does not exist: {input_path}")
+
+    if not os.path.exists(output_path):
+        raise ValueError(f"Output Directory does not exist: {output_path}")
     try:
         output = dict()
 

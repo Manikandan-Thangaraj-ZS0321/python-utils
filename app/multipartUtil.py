@@ -12,22 +12,23 @@ CONFIG = getCommonConfig()
 
 
 @app.post("/multipart-upload")
-async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...)):
+async def create_papers(file: UploadFile = File(...), output_dir: str = Query(...)):
     try:
-        if not os.path.exists(outputDir):
-            os.makedirs(outputDir)
-        outputFile = os.path.join(outputDir, file.filename)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
 
-        with open(outputFile, "wb") as f:
-            read = file.file.read()
-            f.write(read)
+        output_file = os.path.join(output_dir, file.filename)
 
-            # Flush and close the file stream to ensure all data is written
-            f.flush()
-            f.close()
+        if os.path.exists(output_file):
+            logger.info("File {} already exists".format(file.filename))
+            return {"message": "File downloaded successfully", "filename": file.filename}
+
+        with open(output_file, "wb") as f:
+            f.write(file.file.read())
 
         logger.info("File {} downloaded successfully".format(file.filename))
         return {"message": "File downloaded successfully", "filename": file.filename}
+
     except Exception as e:
         logger.error("Error in downloading multipart file {} with exception {}".format(file.filename, e))
         return {"error": str(e)}

@@ -21,7 +21,7 @@ async def create_papers(file: UploadFile = File(...), output_dir: str = Query(..
 
         if os.path.exists(output_file):
             logger.info("File {} already exists".format(file.filename))
-            return {"message": "File downloaded successfully", "filename": file.filename}
+            return {"message": "File already downloaded", "filename": file.filename}
 
         with open(output_file, "wb") as f:
             f.write(file.file.read())

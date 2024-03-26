@@ -12,12 +12,12 @@ CONFIG = getCommonConfig()
 
 
 @app.post("/multipart-upload")
-async def create_papers(file: UploadFile = File(...), output_dir: str = Query(...)):
+async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...)):
     try:
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
+        if not os.path.exists(outputDir):
+            os.makedirs(outputDir, exist_ok=True)
 
-        output_file = os.path.join(output_dir, file.filename)
+        output_file = os.path.join(outputDir, file.filename)
 
         if os.path.exists(output_file):
             logger.info("File {} already exists".format(file.filename))

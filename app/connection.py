@@ -2,9 +2,9 @@
 import psycopg2
 import gc
 
-db_name = "zio_pipeline_ui_local"
+db_name = "zio_pipeline_ui"
 db_server_user = "postgres"
-db_server_pass = "password"
+db_server_pass = "xk56iIUYV1eihMke7W0gbnfnl4gBkArsF26kttM96R8utWA4hJ"
 db_server_host = "intics.db"
 db_server_port = 5432
 

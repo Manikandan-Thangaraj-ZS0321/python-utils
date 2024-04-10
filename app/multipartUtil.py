@@ -3,13 +3,13 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 
-from app.connection import getCommonConfig
+from app.connection import get__common__config
 from app.loggers import logger
 
 app = FastAPI()
-CONFIG = getCommonConfig()
+CONFIG = get__common__config()
 
 
 @app.post("/multipart-upload")
@@ -20,11 +20,13 @@ async def create_papers(file: UploadFile = File(...), output_dir: str = Query(..
         output_file = os.path.join(output_dir, file.filename)
         if os.path.exists(output_file):
             logger.info("File {} already exists".format(file.filename))
-            return {"message": "File already downloaded", "filename": file.filename, "filepath": output_file}
+            return {"message": "File already downloaded", "filename": file.filename, "filepath": output_file,
+                    "status": "Success"}
         with open(output_file, "wb") as f:
             f.write(file.file.read())
         logger.info("File {} downloaded successfully".format(file.filename), exc_info=True)
-        return {"message": "File downloaded successfully", "filename": file.filename, "filepath": output_file}
+        return {"message": "File downloaded successfully", "filename": file.filename, "filepath": output_file,
+                "status": "Success"}
     except Exception as e:
         logger.error("Error in downloading multipart file {} with exception {}".format(file.filename, e), exc_info=True)
         return {"error": str(e)}
@@ -64,7 +66,7 @@ async def delete_files(filepath: str) -> dict:
             logger.info(f"File {filepath} deleted successfully", exc_info=True)
         else:
             logger.info(f"File {filepath} not found", exc_info=True)
-        return {"message": "Files deleted successfully", "filepath": filepath}
+        return {"status": True, "message": "Files deleted successfully", "filepath": filepath}
     except Exception as e:
         logger.error(f"Error deleting files: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")

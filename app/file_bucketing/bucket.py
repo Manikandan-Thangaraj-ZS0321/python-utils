@@ -4,6 +4,7 @@ import fitz
 
 from app.loggers import logger
 
+
 def create_folder(output_path, category, folder_name):
     folder_path = os.path.join(output_path, "file_bucketing", category, folder_name)
     os.makedirs(folder_path, exist_ok=True)
@@ -20,11 +21,10 @@ def update_output(output, folder_name, output_folder, filename):
     output[folder_name].append(os.path.join(output_folder, filename))
 
 
-def bucketing(input_path, output_path, min_page, max_page,
-              low_effort_high_yield_min_page, low_effort_high_yield_max_page,
-              high_effort_high_yield_min_page, high_effort_high_yield_max_page,
-              high_effort_low_yield_min_page):
-
+def file__bucket(input_path, output_path, min_page, max_page,
+                 low_effort_high_yield_min_page, low_effort_high_yield_max_page,
+                 high_effort_high_yield_min_page, high_effort_high_yield_max_page,
+                 high_effort_low_yield_min_page):
     if not os.path.exists(input_path):
         raise ValueError(f"Input Directory does not exist: {input_path}")
 
@@ -41,29 +41,9 @@ def bucketing(input_path, output_path, min_page, max_page,
                     pdf_document = fitz.open(file_path)
                     num_pages = pdf_document.page_count
 
-                    if low_effort_high_yield_min_page <= num_pages < low_effort_high_yield_max_page:
-                        for i, j in zip(min_page, max_page):
-                            if i <= num_pages < j:
-                                folder_name = f'pages_from_{i}_to_{j}'
-                                output_folder = create_folder(output_path, "low_effort_high_yield", folder_name)
-                                copy_to_folder(file_path, output_folder)
-                                update_output(output, folder_name, output_folder, filename)
-                                break
-
-                    elif high_effort_high_yield_min_page <= num_pages < high_effort_high_yield_max_page:
-                        for i, j in zip(min_page, max_page):
-                            if i <= num_pages < j:
-                                folder_name = f'pages_from_{i}_to_{j}'
-                                output_folder = create_folder(output_path, "high_effort_high_yield", folder_name)
-                                copy_to_folder(file_path, output_folder)
-                                update_output(output, folder_name, output_folder, filename)
-                                break
-
-                    elif num_pages > high_effort_low_yield_min_page:
-                        folder_name = f'pages_above_{high_effort_low_yield_min_page}'
-                        output_folder = create_folder(output_path, "high_effort_low_yield", folder_name)
-                        copy_to_folder(file_path, output_folder)
-                        update_output(output, folder_name, output_folder, filename)
+                    handle_pages(file_path, filename, high_effort_high_yield_max_page, high_effort_high_yield_min_page,
+                                 high_effort_low_yield_min_page, low_effort_high_yield_max_page,
+                                 low_effort_high_yield_min_page, max_page, min_page, num_pages, output, output_path)
 
                     pdf_document.close()
 
@@ -71,6 +51,35 @@ def bucketing(input_path, output_path, min_page, max_page,
 
     except FileNotFoundError as file_not_found_error:
         logger.error(f"Error: {file_not_found_error}. Please check if the input path exists.")
+        raise file_not_found_error
     except Exception as ex:
-        logging.error(f"An unexpected error occurred: {ex}")
+        logger.error(f"An unexpected error occurred: {ex}")
+        raise ex
 
+
+def handle_pages(file_path, filename, high_effort_high_yield_max_page, high_effort_high_yield_min_page,
+                 high_effort_low_yield_min_page, low_effort_high_yield_max_page, low_effort_high_yield_min_page,
+                 max_page, min_page, num_pages, output, output_path):
+    if low_effort_high_yield_min_page <= num_pages < low_effort_high_yield_max_page:
+        for i, j in zip(min_page, max_page):
+            if i <= num_pages < j:
+                folder_name = f'pages_from_{i}_to_{j}'
+                output_folder = create_folder(output_path, "low_effort_high_yield", folder_name)
+                copy_to_folder(file_path, output_folder)
+                update_output(output, folder_name, output_folder, filename)
+                break
+
+    elif high_effort_high_yield_min_page <= num_pages < high_effort_high_yield_max_page:
+        for i, j in zip(min_page, max_page):
+            if i <= num_pages < j:
+                folder_name = f'pages_from_{i}_to_{j}'
+                output_folder = create_folder(output_path, "high_effort_high_yield", folder_name)
+                copy_to_folder(file_path, output_folder)
+                update_output(output, folder_name, output_folder, filename)
+                break
+
+    elif num_pages > high_effort_low_yield_min_page:
+        folder_name = f'pages_above_{high_effort_low_yield_min_page}'
+        output_folder = create_folder(output_path, "high_effort_low_yield", folder_name)
+        copy_to_folder(file_path, output_folder)
+        update_output(output, folder_name, output_folder, filename)

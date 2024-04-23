@@ -8,7 +8,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette_prometheus import PrometheusMiddleware, metrics
 
-from app.file_bucketing.bucket import bucketing
+from app.file_bucketing.bucket import file__bucket
 from app.loggers import logger
 
 COPRO_APP = "Copro App"
@@ -16,6 +16,7 @@ COPRO_APP = "Copro App"
 app = FastAPI(title=COPRO_APP)
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics", metrics)
+
 
 @app.middleware("http")
 async def request_middleware(request: Request, call_next):
@@ -30,11 +31,10 @@ async def request_middleware(request: Request, call_next):
         logger.error(f"Request ID {request_id} for file bucketing api failed: {ex}")
         raise JSONResponse(content={"success": False}, status_code=500)
     finally:
-        #response.headers["X-Request-ID"] = request_id
         logger.info(
             "Request ended with TAT {}".format((round(time.time() - process_start_time, 2))))
         logger.debug("Garbage collection  {} for ID {}".format(gc.collect(), request_id))
-        return response
+    return response
 
 
 @app.get("/")
@@ -53,18 +53,24 @@ class PreprocessRequest(BaseModel):
     min_page: list
     max_page: list
 
+
 @app.post("/file-bucket")
 def files_bucket(request: PreprocessRequest):
     logger.info("given file bucketing inbound request  {}".format(request.__str__()))
     processed_files = None
     try:
-        processed_files = bucketing(request.inputDir, request.outputDir, request.min_page, request.max_page, request.low_effort_high_yield_min_page, request.low_effort_high_yield_max_page,
-                                   request.high_effort_high_yield_min_page, request.high_effort_high_yield_max_page, request.high_effort_low_yield_min_page)
+        processed_files = file__bucket(request.inputDir, request.outputDir, request.min_page, request.max_page,
+                                       request.low_effort_high_yield_min_page,
+                                       request.low_effort_high_yield_max_page,
+                                       request.high_effort_high_yield_min_page,
+                                       request.high_effort_high_yield_max_page,
+                                       request.high_effort_low_yield_min_page)
         logger.info(
             "File Bucketing completed for the given input {} and stored the result in {}".format(request.inputDir,
-                                                                                         request.outputDir))
-        return {'bucketedfiles': processed_files}
+                                                                                                 request.outputDir))
+        return {'bucketedFiles': processed_files}
     except Exception as ex:
+        logger.error(str(ex))
         raise ex
     finally:
         if processed_files is not None:

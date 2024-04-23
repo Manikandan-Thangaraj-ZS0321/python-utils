@@ -24,4 +24,3 @@ logging.getLogger().addHandler(console_handler)
 logging.getLogger().setLevel(LOG_SET_LEVEL)
 
 logger = logging.getLogger(__name__)
-

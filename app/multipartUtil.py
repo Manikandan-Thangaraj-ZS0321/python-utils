@@ -24,7 +24,6 @@ async def create_papers(file: UploadFile = File(...), outputDir: str = Query(...
                     "status": "Success"}
         with open(output_file, "wb") as f:
             f.write(file.file.read())
-        print(file.filename)
         logger.info("File {} downloaded successfully".format(file.filename), exc_info=True)
         return {"message": "File downloaded successfully", "filename": file.filename, "filepath": output_file,
                 "status": "Success"}
